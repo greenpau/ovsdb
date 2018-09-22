@@ -145,7 +145,7 @@ func (cli *OvnClient) GetLogicalSwitchPorts() ([]*OvnLogicalSwitchPort, error) {
 			if dt != "integer" {
 				continue
 			}
-			portBindingTunnelKey = uint64(r.(int))
+			portBindingTunnelKey = uint64(r.(int64))
 		}
 		for _, port := range ports {
 			if port.Name == portBindingLogicalPortName {

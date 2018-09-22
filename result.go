@@ -43,7 +43,7 @@ func (r *Row) GetColumnValue(column string, columns map[string]string) (interfac
 	case "int":
 		return data, "integer", nil
 	case "float64":
-		return int(data.(float64)), "integer", nil
+		return int64(data.(float64)), "integer", nil
 	case "slice":
 		sliceData := []string{}
 		sliceDataKey := reflect.ValueOf(data).Index(0).Interface().(string)

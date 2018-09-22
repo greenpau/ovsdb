@@ -108,7 +108,7 @@ func (cli *OvnClient) GetLogicalSwitches() ([]*OvnLogicalSwitch, error) {
 			if dt != "integer" {
 				continue
 			}
-			bindTunnelKey = uint64(r.(int))
+			bindTunnelKey = uint64(r.(int64))
 		}
 		if r, dt, err := row.GetColumnValue("external_ids", result.Columns); err != nil {
 			continue

@@ -112,23 +112,29 @@ func (cli *OvnClient) GetAppClusteringInfo(db string) (ClusterState, error) {
 		}
 		if strings.HasPrefix(line, "Cluster ID:") {
 			s := strings.TrimLeft(line, "Cluster ID:")
-			s = strings.Join(strings.Fields(s), " ")
+			s = strings.Join(strings.Fields(strings.TrimSpace(s)), " ")
 			arr := strings.Split(s, " ")
 			if len(arr) != 2 {
 				continue
 			}
 			server.ClusterID = arr[0]
 			server.ClusterUUID = strings.TrimRight(strings.TrimLeft(arr[1], "("), ")")
+			if len(server.ClusterUUID) > 4 {
+				server.ClusterID = server.ClusterUUID[0:4]
+			}
 			continue
 		} else if strings.HasPrefix(line, "Server ID:") {
 			s := strings.TrimLeft(line, "Server ID:")
-			s = strings.Join(strings.Fields(s), " ")
+			s = strings.Join(strings.Fields(strings.TrimSpace(s)), " ")
 			arr := strings.Split(s, " ")
 			if len(arr) != 2 {
 				continue
 			}
 			server.ID = arr[0]
 			server.UUID = strings.TrimRight(strings.TrimLeft(arr[1], "("), ")")
+			if len(server.UUID) > 4 {
+				server.ID = server.UUID[0:4]
+			}
 			continue
 		} else if strings.HasPrefix(line, "Address:") {
 			s := strings.TrimLeft(line, "Address:")
@@ -221,6 +227,9 @@ func (cli *OvnClient) GetAppClusteringInfo(db string) (ClusterState, error) {
 				var peer ClusterPeer
 				if strings.HasPrefix(entry, "<-") {
 					peerID := strings.TrimLeft(entry, "<-")
+					if peerID == "0000" {
+						continue
+					}
 					if _, exists := server.Peers[peerID]; !exists {
 						peer = ClusterPeer{}
 						peer.ID = peerID
@@ -231,6 +240,9 @@ func (cli *OvnClient) GetAppClusteringInfo(db string) (ClusterState, error) {
 				}
 				if strings.HasPrefix(entry, "->") {
 					peerID := strings.TrimLeft(entry, "->")
+					if peerID == "0000" {
+						continue
+					}
 					if _, exists := server.Peers[peerID]; !exists {
 						peer = ClusterPeer{}
 						peer.ID = peerID
@@ -243,7 +255,7 @@ func (cli *OvnClient) GetAppClusteringInfo(db string) (ClusterState, error) {
 		} else if strings.HasPrefix(line, "Servers:") {
 			continue
 		} else if strings.Contains(line, "next_index=") && strings.Contains(line, "match_index=") {
-			s := strings.Join(strings.Fields(line), " ")
+			s := strings.Join(strings.Fields(strings.TrimSpace(line)), " ")
 			arr := strings.Split(s, " ")
 			if len(arr) < 5 {
 				continue
