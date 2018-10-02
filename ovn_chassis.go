@@ -16,18 +16,21 @@ package ovsdb
 
 import (
 	"fmt"
+	"net"
 )
 
 // OvnChassis represent an OVN chassis.
 type OvnChassis struct {
 	UUID      string
 	Name      string
-	IPAddress string
+	IPAddress net.IP
 	Encaps    struct {
 		UUID  string
 		Proto string
 	}
-	Up int
+	Up       int
+	Ports    []string
+	Switches []string
 }
 
 // GetChassis returns a list of OVN chassis.
@@ -44,6 +47,8 @@ func (cli *OvnClient) GetChassis() ([]*OvnChassis, error) {
 	}
 	for _, row := range result.Rows {
 		c := &OvnChassis{}
+		c.Ports = []string{}
+		c.Switches = []string{}
 		if r, dt, err := row.GetColumnValue("_uuid", result.Columns); err != nil {
 			continue
 		} else {
@@ -124,10 +129,32 @@ func (cli *OvnClient) GetChassis() ([]*OvnChassis, error) {
 			if c.Name != chassisName {
 				continue
 			}
-			c.IPAddress = chassisIPAddress
+			c.IPAddress = net.ParseIP(chassisIPAddress)
 			c.Encaps.Proto = encapProto
 			break
 		}
 	}
 	return chassis, nil
+}
+
+// MapPortToChassis updates logical switch ports with the entries from the
+// chassis associated with the ports.
+func (cli *OvnClient) MapPortToChassis(vteps []*OvnChassis, logicalSwitchPorts []*OvnLogicalSwitchPort) {
+	portMap := make(map[string]*OvnChassis)
+	switchMap := make(map[string]bool)
+	for _, vtep := range vteps {
+		portMap[vtep.UUID] = vtep
+	}
+	for _, logicalSwitchPort := range logicalSwitchPorts {
+		if _, exists := portMap[logicalSwitchPort.ChassisUUID]; !exists {
+			continue
+		}
+		logicalSwitchPort.Encapsulation = portMap[logicalSwitchPort.ChassisUUID].Encaps.Proto
+		logicalSwitchPort.ChassisIPAddress = portMap[logicalSwitchPort.ChassisUUID].IPAddress
+		portMap[logicalSwitchPort.ChassisUUID].Ports = append(portMap[logicalSwitchPort.ChassisUUID].Ports, logicalSwitchPort.UUID)
+		if _, exists := switchMap[logicalSwitchPort.LogicalSwitchUUID]; !exists {
+			switchMap[logicalSwitchPort.LogicalSwitchUUID] = true
+			portMap[logicalSwitchPort.ChassisUUID].Switches = append(portMap[logicalSwitchPort.ChassisUUID].Switches, logicalSwitchPort.LogicalSwitchUUID)
+		}
+	}
 }

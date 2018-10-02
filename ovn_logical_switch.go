@@ -72,7 +72,7 @@ func (cli *OvnClient) GetLogicalSwitches() ([]*OvnLogicalSwitch, error) {
 			}
 		}
 		if r, dt, err := row.GetColumnValue("external_ids", result.Columns); err != nil {
-			continue
+			sw.ExternalIDs = make(map[string]string)
 		} else {
 			if dt == "map[string]string" {
 				sw.ExternalIDs = r.(map[string]string)
@@ -133,4 +133,27 @@ func (cli *OvnClient) GetLogicalSwitches() ([]*OvnLogicalSwitch, error) {
 		}
 	}
 	return switches, nil
+}
+
+// MapPortToSwitch update logical switch ports with the entries from the
+// logical switches associated with the ports.
+func (cli *OvnClient) MapPortToSwitch(logicalSwitches []*OvnLogicalSwitch, logicalSwitchPorts []*OvnLogicalSwitchPort) {
+	portRef := make(map[string]string)
+	portMap := make(map[string]*OvnLogicalSwitch)
+	for _, logicalSwitch := range logicalSwitches {
+		for _, port := range logicalSwitch.Ports {
+			portRef[port] = logicalSwitch.UUID
+			portMap[port] = logicalSwitch
+		}
+	}
+	for _, logicalSwitchPort := range logicalSwitchPorts {
+		if _, exists := portRef[logicalSwitchPort.UUID]; !exists {
+			continue
+		}
+		logicalSwitchPort.LogicalSwitchUUID = portMap[logicalSwitchPort.UUID].UUID
+		logicalSwitchPort.LogicalSwitchName = portMap[logicalSwitchPort.UUID].Name
+		for k, v := range portMap[logicalSwitchPort.UUID].ExternalIDs {
+			logicalSwitchPort.ExternalIDs[k] = v
+		}
+	}
 }

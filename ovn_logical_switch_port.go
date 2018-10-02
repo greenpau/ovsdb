@@ -34,7 +34,9 @@ type OvnLogicalSwitchPort struct {
 	Up                bool
 	PortBindingUUID   string
 	ChassisUUID       string
+	ChassisIPAddress  net.IP
 	DatapathUUID      string
+	LogicalSwitchUUID string
 	LogicalSwitchName string
 }
 
@@ -77,6 +79,8 @@ func (cli *OvnClient) GetLogicalSwitchPorts() ([]*OvnLogicalSwitchPort, error) {
 			if dt == "map[string]string" {
 				port.ExternalIDs = r.(map[string]string)
 			}
+		} else {
+			port.ExternalIDs = make(map[string]string)
 		}
 		if r, dt, err := row.GetColumnValue("addresses", result.Columns); err == nil {
 			if dt == "string" {
