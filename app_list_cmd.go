@@ -20,21 +20,12 @@ import (
 	"strings"
 )
 
-// AppListCommands returns the list of commands supported by
-// ovs-appctl tool and the database.
-func (cli *OvnClient) AppListCommands(db string) (map[string]bool, error) {
+func appListCommands(db string, sock string, timeout int) (map[string]bool, error) {
 	var app Client
 	var err error
 	cmd := "list-commands"
 	cmds := make(map[string]bool)
-	switch db {
-	case "ovsdb-server-northbound":
-		app, err = NewClient(cli.Database.Northbound.Socket.Control, cli.Timeout)
-	case "ovsdb-server-southbound":
-		app, err = NewClient(cli.Database.Southbound.Socket.Control, cli.Timeout)
-	default:
-		return cmds, fmt.Errorf("The '%s' database is unsupported for '%s'", db, cmd)
-	}
+	app, err = NewClient(sock, timeout)
 	if err != nil {
 		return cmds, fmt.Errorf("failed '%s' from %s: %s", cmd, db, err)
 	}
@@ -56,4 +47,34 @@ func (cli *OvnClient) AppListCommands(db string) (map[string]bool, error) {
 		cmds[strings.Join(strings.Fields(line), " ")] = true
 	}
 	return cmds, nil
+}
+
+// AppListCommands returns the list of commands supported by
+// ovs-appctl tool and the database.
+func (cli *OvnClient) AppListCommands(db string) (map[string]bool, error) {
+	cmd := "list-commands"
+	cli.updateRefs()
+	switch db {
+	case "ovsdb-server-northbound":
+		return appListCommands(db, cli.Database.Northbound.Socket.Control, cli.Timeout)
+	case "ovsdb-server-southbound":
+		return appListCommands(db, cli.Database.Southbound.Socket.Control, cli.Timeout)
+	case "ovsdb-server":
+		return appListCommands(db, cli.Database.Vswitch.Socket.Control, cli.Timeout)
+	default:
+		return nil, fmt.Errorf("The '%s' database is unsupported for '%s'", db, cmd)
+	}
+}
+
+// AppListCommands returns the list of commands supported by
+// ovs-appctl tool and the database.
+func (cli *OvsClient) AppListCommands(db string) (map[string]bool, error) {
+	cli.updateRefs()
+	cmd := "list-commands"
+	switch db {
+	case "ovsdb-server":
+		return appListCommands(db, cli.Database.Vswitch.Socket.Control, cli.Timeout)
+	default:
+		return nil, fmt.Errorf("The '%s' database is unsupported for '%s'", db, cmd)
+	}
 }

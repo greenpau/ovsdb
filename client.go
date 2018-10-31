@@ -117,22 +117,22 @@ func (cli *Client) query(method string, param interface{}) (*Response, error) {
 	return nil, fmt.Errorf("%s", errMsgs)
 }
 
-func (c *Client) getColumns(db, table string) (map[string]string, error) {
-	if _, dbExists := c.References[db]; dbExists {
-		if _, tblExists := c.References[db][table]; tblExists {
-			return c.References[db][table], nil
+func (cli *Client) getColumns(db, table string) (map[string]string, error) {
+	if _, dbExists := cli.References[db]; dbExists {
+		if _, tblExists := cli.References[db][table]; tblExists {
+			return cli.References[db][table], nil
 		}
 	}
-	schema, err := c.GetSchema(db)
+	schema, err := cli.GetSchema(db)
 	if err != nil {
 		return make(map[string]string), err
 	}
-	c.References[db] = make(map[string]map[string]string)
+	cli.References[db] = make(map[string]map[string]string)
 	columns, err := schema.GetColumnsTypes(table)
 	if err != nil {
 		return columns, err
 	}
-	c.References[db][table] = columns
+	cli.References[db][table] = columns
 	return columns, nil
 }
 

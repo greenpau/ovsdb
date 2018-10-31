@@ -18,6 +18,34 @@ import (
 	"fmt"
 )
 
+// OvsDatabase represents an instance of OVS DB.
+type OvsDatabase struct {
+	Client *Client
+	Name   string
+	Socket struct {
+		Remote  string
+		Control string
+		Raft    string
+	}
+	Port struct {
+		Default int
+		Ssl     int
+		Raft    int
+	}
+	File struct {
+		Log      OvsDataFile
+		Data     OvsDataFile
+		Pid      OvsDataFile
+		SystemID OvsDataFile
+	}
+	Process OvsProcess
+	Version string
+	Schema  struct {
+		Version string
+	}
+	connected bool
+}
+
 // Databases - DOCS-TBD
 func (c *Client) Databases() ([]string, error) {
 	method := "list_dbs"

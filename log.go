@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-func (cli *OvnClient) readLogFile(f OvsDataFile) (map[string]map[string]uint64, int64, error) {
+func readLogFile(f OvsDataFile) (map[string]map[string]uint64, int64, error) {
 	var offset int64
 	var size int64
 	var stats = map[string]map[string]uint64{}
@@ -97,35 +97,56 @@ func (cli *OvnClient) readLogFile(f OvsDataFile) (map[string]map[string]uint64, 
 func (cli *OvnClient) GetLogFileEventStats(name string) (map[string]map[string]uint64, error) {
 	switch name {
 	case "ovsdb-server":
-		stats, offset, err := cli.readLogFile(cli.Database.Vswitch.File.Log)
+		stats, offset, err := readLogFile(cli.Database.Vswitch.File.Log)
 		if err != nil {
 			return stats, err
 		}
 		cli.Database.Vswitch.File.Log.Reader.Offset = offset
 		return stats, nil
 	case "ovsdb-server-northbound":
-		stats, offset, err := cli.readLogFile(cli.Database.Northbound.File.Log)
+		stats, offset, err := readLogFile(cli.Database.Northbound.File.Log)
 		if err != nil {
 			return stats, err
 		}
 		cli.Database.Northbound.File.Log.Reader.Offset = offset
 		return stats, nil
 	case "ovsdb-server-southbound":
-		stats, offset, err := cli.readLogFile(cli.Database.Southbound.File.Log)
+		stats, offset, err := readLogFile(cli.Database.Southbound.File.Log)
 		if err != nil {
 			return stats, err
 		}
 		cli.Database.Southbound.File.Log.Reader.Offset = offset
 		return stats, nil
 	case "ovn-northd":
-		stats, offset, err := cli.readLogFile(cli.Service.Northd.File.Log)
+		stats, offset, err := readLogFile(cli.Service.Northd.File.Log)
 		if err != nil {
 			return stats, err
 		}
 		cli.Service.Northd.File.Log.Reader.Offset = offset
 		return stats, nil
 	case "ovs-vswitchd":
-		stats, offset, err := cli.readLogFile(cli.Service.Vswitchd.File.Log)
+		stats, offset, err := readLogFile(cli.Service.Vswitchd.File.Log)
+		if err != nil {
+			return stats, err
+		}
+		cli.Service.Vswitchd.File.Log.Reader.Offset = offset
+		return stats, nil
+	}
+	return nil, fmt.Errorf("The '%s' component is unsupported", name)
+}
+
+// GetLogFileEventStats TODO
+func (cli *OvsClient) GetLogFileEventStats(name string) (map[string]map[string]uint64, error) {
+	switch name {
+	case "ovsdb-server":
+		stats, offset, err := readLogFile(cli.Database.Vswitch.File.Log)
+		if err != nil {
+			return stats, err
+		}
+		cli.Database.Vswitch.File.Log.Reader.Offset = offset
+		return stats, nil
+	case "ovs-vswitchd":
+		stats, offset, err := readLogFile(cli.Service.Vswitchd.File.Log)
 		if err != nil {
 			return stats, err
 		}
@@ -167,6 +188,31 @@ func (cli *OvnClient) GetLogFileInfo(name string) (OvsDataFile, error) {
 			cli.Service.Northd.File.Log.Info = i
 			cli.Service.Northd.File.Log.Component = name
 			return cli.Service.Northd.File.Log, nil
+		}
+	case "ovs-vswitchd":
+		i, err = os.Stat(cli.Service.Vswitchd.File.Log.Path)
+		if err == nil {
+			cli.Service.Vswitchd.File.Log.Info = i
+			cli.Service.Vswitchd.File.Log.Component = name
+			return cli.Service.Vswitchd.File.Log, nil
+		}
+	default:
+		return OvsDataFile{}, fmt.Errorf("The '%s' component is unsupported", name)
+	}
+	return OvsDataFile{}, err
+}
+
+// GetLogFileInfo TODO
+func (cli *OvsClient) GetLogFileInfo(name string) (OvsDataFile, error) {
+	var i os.FileInfo
+	var err error
+	switch name {
+	case "ovsdb-server":
+		i, err = os.Stat(cli.Database.Vswitch.File.Log.Path)
+		if err == nil {
+			cli.Database.Vswitch.File.Log.Info = i
+			cli.Database.Vswitch.File.Log.Component = name
+			return cli.Database.Vswitch.File.Log, nil
 		}
 	case "ovs-vswitchd":
 		i, err = os.Stat(cli.Service.Vswitchd.File.Log.Path)

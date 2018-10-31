@@ -44,6 +44,24 @@ func (cli *OvnClient) IsDefaultPortUp(db string) (int, error) {
 	return port, nil
 }
 
+// IsDefaultPortUp returns the TCP port used for database connection.
+// If the value if greater than 0, then the port is in LISTEN state.
+func (cli *OvsClient) IsDefaultPortUp(db string) (int, error) {
+	var port int
+	var pid int
+	switch db {
+	case "ovsdb-server":
+		port = cli.Database.Vswitch.Port.Default
+		pid = cli.Database.Vswitch.Process.ID
+	default:
+		return 0, fmt.Errorf("The '%s' database is unsupported", db)
+	}
+	if !isPortUp(pid, port) {
+		port = 0
+	}
+	return port, nil
+}
+
 // IsSslPortUp returns the TCP port used for secure database connection.
 // If the value if greater than 0, then the port is in LISTEN state.
 func (cli *OvnClient) IsSslPortUp(db string) (int, error) {
@@ -56,6 +74,24 @@ func (cli *OvnClient) IsSslPortUp(db string) (int, error) {
 	case "ovsdb-server-southbound":
 		port = cli.Database.Southbound.Port.Ssl
 		pid = cli.Database.Southbound.Process.ID
+	default:
+		return 0, fmt.Errorf("The '%s' database is unsupported", db)
+	}
+	if !isPortUp(pid, port) {
+		port = 0
+	}
+	return port, nil
+}
+
+// IsSslPortUp returns the TCP port used for secure database connection.
+// If the value if greater than 0, then the port is in LISTEN state.
+func (cli *OvsClient) IsSslPortUp(db string) (int, error) {
+	var port int
+	var pid int
+	switch db {
+	case "ovsdb-server":
+		port = cli.Database.Vswitch.Port.Ssl
+		pid = cli.Database.Vswitch.Process.ID
 	default:
 		return 0, fmt.Errorf("The '%s' database is unsupported", db)
 	}

@@ -20,37 +20,55 @@ import (
 	"os"
 )
 
+// OvsDataFile stores information about the files related to OVS
+// operations, e.g. log files, database files, etc.
+type OvsDataFile struct {
+	Path      string
+	Component string
+	Info      os.FileInfo
+	Reader    struct {
+		Offset int64
+	}
+}
+
+// OvsDaemon stores information about a process or database, together
+// with associated log and process id files.
+type OvsDaemon struct {
+	File struct {
+		Log OvsDataFile
+		Pid OvsDataFile
+	}
+	Process OvsProcess
+	Socket  struct {
+		Control string
+	}
+}
+
 // GetSystemID TODO
 func (cli *OvnClient) GetSystemID() error {
-	var systemID string
-	file, err := os.Open(cli.Database.Vswitch.File.SystemID.Path)
+	systemID, err := getSystemID(cli.Database.Vswitch.File.SystemID.Path)
 	if err != nil {
 		return err
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		systemID = scanner.Text()
-		break
-	}
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-	if len(systemID) != 36 {
-		return fmt.Errorf("system-id is not 32 characters in length, but %d", len(systemID))
 	}
 	cli.System.ID = systemID
 	return nil
 }
 
-// GetSystemInfo returns a hash containing system information, e.g. `system_id`
-// associated with the Open_vSwitch database.
-func (cli *OvnClient) GetSystemInfo() error {
-	systemInfo := make(map[string]string)
-	var systemID string
-	file, err := os.Open(cli.Database.Vswitch.File.SystemID.Path)
+// GetSystemID TODO
+func (cli *OvsClient) GetSystemID() error {
+	systemID, err := getSystemID(cli.Database.Vswitch.File.SystemID.Path)
 	if err != nil {
 		return err
+	}
+	cli.System.ID = systemID
+	return nil
+}
+
+func getSystemID(filepath string) (string, error) {
+	var systemID string
+	file, err := os.Open(filepath)
+	if err != nil {
+		return systemID, err
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
@@ -59,10 +77,61 @@ func (cli *OvnClient) GetSystemInfo() error {
 		break
 	}
 	if err := scanner.Err(); err != nil {
-		return err
+		return systemID, err
 	}
 	if len(systemID) != 36 {
-		return fmt.Errorf("system-id is not 32 characters in length, but %d", len(systemID))
+		return systemID, fmt.Errorf("system-id is not 32 characters in length, but %d", len(systemID))
+	}
+	return systemID, nil
+}
+
+func parseSystemInfo(systemID string, result Result) (map[string]string, error) {
+	systemInfo := make(map[string]string)
+	for _, row := range result.Rows {
+		col := "external_ids"
+		rowData, dataType, err := row.GetColumnValue(col, result.Columns)
+		if err != nil {
+			return systemInfo, fmt.Errorf("parsing '%s' failed: %s", col, err)
+		}
+		if dataType != "map[string]string" {
+			return systemInfo, fmt.Errorf("data type '%s' for '%s' column is unexpected in this context", dataType, col)
+		}
+		systemInfo = rowData.(map[string]string)
+		columns := []string{"ovs_version", "db_version", "system_type", "system_version"}
+		for _, col := range columns {
+			rowData, dataType, err = row.GetColumnValue(col, result.Columns)
+			if err != nil {
+				return systemInfo, fmt.Errorf("parsing '%s' failed: %s", col, err)
+			}
+			if dataType != "string" {
+				return systemInfo, fmt.Errorf("data type '%s' for '%s' column is unexpected in this context", dataType, col)
+			}
+			systemInfo[col] = rowData.(string)
+		}
+		break
+	}
+	if dbSystemID, exists := systemInfo["system-id"]; exists {
+		if dbSystemID != systemID {
+			return systemInfo, fmt.Errorf("found 'system-id' mismatch %s (db) vs. %s (config)", dbSystemID, systemID)
+		}
+	} else {
+		return systemInfo, fmt.Errorf("no 'system-id' found")
+	}
+	requiredKeys := []string{"rundir", "hostname", "ovs_version", "db_version", "system_type", "system_version"}
+	for _, key := range requiredKeys {
+		if _, exists := systemInfo[key]; exists == false {
+			return systemInfo, fmt.Errorf("no mandatory '%s' found", key)
+		}
+	}
+	return systemInfo, nil
+}
+
+// GetSystemInfo returns a hash containing system information, e.g. `system_id`
+// associated with the Open_vSwitch database.
+func (cli *OvnClient) GetSystemInfo() error {
+	systemID, err := getSystemID(cli.Database.Vswitch.File.SystemID.Path)
+	if err != nil {
+		return err
 	}
 	cli.System.ID = systemID
 	query := fmt.Sprintf("SELECT ovs_version, db_version, system_type, system_version, external_ids FROM %s", cli.Database.Vswitch.Name)
@@ -73,45 +142,40 @@ func (cli *OvnClient) GetSystemInfo() error {
 	if len(result.Rows) == 0 {
 		return fmt.Errorf("The '%s' query did not return any rows", query)
 	}
-	//spew.Dump(result)
-	for _, row := range result.Rows {
-		col := "external_ids"
-		rowData, dataType, err := row.GetColumnValue(col, result.Columns)
-		if err != nil {
-			return fmt.Errorf("The '%s' query succeeded, but parsing '%s' failed: %s", query, col, err)
-		}
-		if dataType != "map[string]string" {
-			return fmt.Errorf("The '%s' query succeeded, but data type '%s' for '%s' column is unexpected in this context", query, dataType, col)
-		}
-		systemInfo = rowData.(map[string]string)
-		columns := []string{"ovs_version", "db_version", "system_type", "system_version"}
-		for _, col := range columns {
-			rowData, dataType, err = row.GetColumnValue(col, result.Columns)
-			if err != nil {
-				return fmt.Errorf("The '%s' query succeeded, but parsing '%s' failed: %s", query, col, err)
-			}
-			if dataType != "string" {
-				return fmt.Errorf("The '%s' query succeeded, but data type '%s' for '%s' column is unexpected in this context", query, dataType, col)
-			}
-			systemInfo[col] = rowData.(string)
-		}
-		break
+	systemInfo, err := parseSystemInfo(systemID, result)
+	if err != nil {
+		return fmt.Errorf("The '%s' query returned results but erred: %s", query, err)
 	}
-	if dbSystemID, exists := systemInfo["system-id"]; exists {
-		if dbSystemID != systemID {
-			return fmt.Errorf("The '%s' query succeeded, but found 'system-id' mismatch %s (db) vs. %s (config)", query, dbSystemID, systemID)
-		}
-	} else {
-		return fmt.Errorf("The '%s' query succeeded, but no 'system-id' found", query)
-	}
+	cli.System.ID = systemInfo["system-id"]
+	cli.System.RunDir = systemInfo["rundir"]
+	cli.System.Hostname = systemInfo["hostname"]
+	cli.System.Type = systemInfo["system_type"]
+	cli.System.Version = systemInfo["system_version"]
+	cli.Database.Vswitch.Version = systemInfo["ovs_version"]
+	cli.Database.Vswitch.Schema.Version = systemInfo["db_version"]
+	return nil
+}
 
-	requiredKeys := []string{"rundir", "hostname", "ovs_version", "db_version", "system_type", "system_version"}
-	for _, key := range requiredKeys {
-		if _, exists := systemInfo[key]; exists == false {
-			return fmt.Errorf("The '%s' query succeeded, but no '%s' found", query, key)
-		}
+// GetSystemInfo returns a hash containing system information, e.g. `system_id`
+// associated with the Open_vSwitch database.
+func (cli *OvsClient) GetSystemInfo() error {
+	systemID, err := getSystemID(cli.Database.Vswitch.File.SystemID.Path)
+	if err != nil {
+		return err
 	}
-
+	cli.System.ID = systemID
+	query := fmt.Sprintf("SELECT ovs_version, db_version, system_type, system_version, external_ids FROM %s", cli.Database.Vswitch.Name)
+	result, err := cli.Database.Vswitch.Client.Transact(cli.Database.Vswitch.Name, query)
+	if err != nil {
+		return fmt.Errorf("The '%s' query failed: %s", query, err)
+	}
+	if len(result.Rows) == 0 {
+		return fmt.Errorf("The '%s' query did not return any rows", query)
+	}
+	systemInfo, err := parseSystemInfo(systemID, result)
+	if err != nil {
+		return fmt.Errorf("The '%s' query returned results but erred: %s", query, err)
+	}
 	cli.System.ID = systemInfo["system-id"]
 	cli.System.RunDir = systemInfo["rundir"]
 	cli.System.Hostname = systemInfo["hostname"]

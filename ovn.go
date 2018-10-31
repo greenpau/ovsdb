@@ -17,57 +17,7 @@ package ovsdb
 import (
 	"fmt"
 	//"github.com/davecgh/go-spew/spew"
-	"os"
 )
-
-// OvsDatabase represents an instance of OVS DB.
-type OvsDatabase struct {
-	Client *Client
-	Name   string
-	Socket struct {
-		Remote  string
-		Control string
-		Raft    string
-	}
-	Port struct {
-		Default int
-		Ssl     int
-		Raft    int
-	}
-	File struct {
-		Log      OvsDataFile
-		Data     OvsDataFile
-		Pid      OvsDataFile
-		SystemID OvsDataFile
-	}
-	Process OvsProcess
-	Version string
-	Schema  struct {
-		Version string
-	}
-	connected bool
-}
-
-// OvsDataFile stores information about the files related to OVS
-// operations, e.g. log files, database files, etc.
-type OvsDataFile struct {
-	Path      string
-	Component string
-	Info      os.FileInfo
-	Reader    struct {
-		Offset int64
-	}
-}
-
-// OvsDaemon stores information about a process or database, together
-// with associated log and process id files.
-type OvsDaemon struct {
-	File struct {
-		Log OvsDataFile
-		Pid OvsDataFile
-	}
-	Process OvsProcess
-}
 
 // OvnClient holds connection to all OVN databases.
 type OvnClient struct {
@@ -101,18 +51,20 @@ func NewOvnClient() *OvnClient {
 	cli.System.Type = "unknown"
 	cli.System.Version = "unknown"
 
+	cli.Database.Vswitch.Process.ID = 0
+	cli.Database.Vswitch.Process.User = "openvswitch"
+	cli.Database.Vswitch.Process.Group = "openvswitch"
 	cli.Database.Vswitch.Version = "unknown"
 	cli.Database.Vswitch.Schema.Version = "unknown"
 	cli.Database.Vswitch.Name = "Open_vSwitch"
 	cli.Database.Vswitch.Socket.Remote = "unix:/var/run/openvswitch/db.sock"
-	cli.Database.Vswitch.Socket.Control = ""
+	cli.Database.Vswitch.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovsdb-server.%d.ctl", cli.Database.Vswitch.Process.ID)
 	cli.Database.Vswitch.File.Data.Path = "/etc/openvswitch/conf.db"
 	cli.Database.Vswitch.File.Log.Path = "/var/log/openvswitch/ovsdb-server.log"
 	cli.Database.Vswitch.File.Pid.Path = "/var/run/openvswitch/ovsdb-server.pid"
 	cli.Database.Vswitch.File.SystemID.Path = "/etc/openvswitch/system-id.conf"
-	cli.Database.Vswitch.Process.ID = 0
-	cli.Database.Vswitch.Process.User = "openvswitch"
-	cli.Database.Vswitch.Process.Group = "openvswitch"
+	cli.Database.Vswitch.Port.Default = 6640
+	cli.Database.Vswitch.Port.Ssl = 6630
 
 	cli.Database.Northbound.Name = "OVN_Northbound"
 	cli.Database.Northbound.Socket.Remote = "unix:/run/openvswitch/ovnnb_db.sock"
@@ -140,17 +92,19 @@ func NewOvnClient() *OvnClient {
 	cli.Database.Southbound.Port.Ssl = 6632
 	cli.Database.Southbound.Port.Raft = 6644
 
-	cli.Service.Vswitchd.File.Log.Path = "/var/log/openvswitch/ovs-vswitchd.log"
-	cli.Service.Vswitchd.File.Pid.Path = "/var/run/openvswitch/ovs-vswitchd.pid"
 	cli.Service.Vswitchd.Process.ID = 0
 	cli.Service.Vswitchd.Process.User = "openvswitch"
 	cli.Service.Vswitchd.Process.Group = "openvswitch"
+	cli.Service.Vswitchd.File.Log.Path = "/var/log/openvswitch/ovs-vswitchd.log"
+	cli.Service.Vswitchd.File.Pid.Path = "/var/run/openvswitch/ovs-vswitchd.pid"
+	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovs-vswitchd.%d.ctl", cli.Service.Vswitchd.Process.ID)
 
-	cli.Service.Northd.File.Log.Path = "/var/log/openvswitch/ovn-northd.log"
-	cli.Service.Northd.File.Pid.Path = "/run/openvswitch/ovn-northd.pid"
 	cli.Service.Northd.Process.ID = 0
 	cli.Service.Northd.Process.User = "openvswitch"
 	cli.Service.Northd.Process.Group = "openvswitch"
+	cli.Service.Northd.File.Log.Path = "/var/log/openvswitch/ovn-northd.log"
+	cli.Service.Northd.File.Pid.Path = "/run/openvswitch/ovn-northd.pid"
+	cli.Service.Northd.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovn-northd.%d.ctl", cli.Service.Northd.Process.ID)
 
 	return &cli
 }
@@ -199,4 +153,10 @@ func (cli *OvnClient) Close() {
 	if cli.Database.Vswitch.Client != nil {
 		cli.Database.Vswitch.Client.Close()
 	}
+}
+
+func (cli *OvnClient) updateRefs() {
+	cli.Database.Vswitch.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovsdb-server.%d.ctl", cli.Database.Vswitch.Process.ID)
+	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovs-vswitchd.%d.ctl", cli.Service.Vswitchd.Process.ID)
+	cli.Service.Northd.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovn-northd.%d.ctl", cli.Service.Northd.Process.ID)
 }

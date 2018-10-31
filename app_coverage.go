@@ -24,19 +24,12 @@ import (
 // occur during a daemon's runtime. The counters include averaged per-second
 // rates for the last few seconds, the last minute and the last hour, and the
 // total counts of all of the coverage counters.
-func (cli *OvnClient) GetAppCoverageMetrics(db string) (map[string]map[string]float64, error) {
+func getAppCoverageMetrics(db string, sock string, timeout int) (map[string]map[string]float64, error) {
 	var app Client
 	var err error
 	cmd := "coverage/show"
 	metrics := make(map[string]map[string]float64)
-	switch db {
-	case "ovsdb-server-northbound":
-		app, err = NewClient(cli.Database.Northbound.Socket.Control, cli.Timeout)
-	case "ovsdb-server-southbound":
-		app, err = NewClient(cli.Database.Southbound.Socket.Control, cli.Timeout)
-	default:
-		return metrics, fmt.Errorf("The '%s' database is unsupported for '%s'", db, cmd)
-	}
+	app, err = NewClient(sock, timeout)
 	if err != nil {
 		app.Close()
 		return metrics, fmt.Errorf("failed '%s' from %s: %s", cmd, db, err)
@@ -75,4 +68,38 @@ func (cli *OvnClient) GetAppCoverageMetrics(db string) (map[string]map[string]fl
 		}
 	}
 	return metrics, nil
+}
+
+// GetAppCoverageMetrics returns the counters of the the number of times particular events
+// occur during a daemon's runtime. The counters include averaged per-second
+// rates for the last few seconds, the last minute and the last hour, and the
+// total counts of all of the coverage counters.
+func (cli *OvnClient) GetAppCoverageMetrics(db string) (map[string]map[string]float64, error) {
+	cli.updateRefs()
+	cmd := "coverage/show"
+	switch db {
+	case "ovsdb-server-northbound":
+		return getAppCoverageMetrics(db, cli.Database.Northbound.Socket.Control, cli.Timeout)
+	case "ovsdb-server-southbound":
+		return getAppCoverageMetrics(db, cli.Database.Southbound.Socket.Control, cli.Timeout)
+	case "ovsdb-server":
+		return getAppCoverageMetrics(db, cli.Database.Vswitch.Socket.Control, cli.Timeout)
+	default:
+		return nil, fmt.Errorf("The '%s' database is unsupported for '%s'", db, cmd)
+	}
+}
+
+// GetAppCoverageMetrics returns the counters of the the number of times particular events
+// occur during a daemon's runtime. The counters include averaged per-second
+// rates for the last few seconds, the last minute and the last hour, and the
+// total counts of all of the coverage counters.
+func (cli *OvsClient) GetAppCoverageMetrics(db string) (map[string]map[string]float64, error) {
+	cli.updateRefs()
+	cmd := "coverage/show"
+	switch db {
+	case "ovsdb-server":
+		return getAppCoverageMetrics(db, cli.Database.Vswitch.Socket.Control, cli.Timeout)
+	default:
+		return nil, fmt.Errorf("The '%s' database is unsupported for '%s'", db, cmd)
+	}
 }

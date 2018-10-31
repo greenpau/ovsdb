@@ -28,7 +28,7 @@ func TestListDatabasesMethod(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FAIL: expected to find databases, but received the error: %v", err)
 	}
-	if len(databases) != 1 {
+	if len(databases) < 1 {
 		t.Fatalf("FAIL: expected to find a single database, but found: %d", len(databases))
 	}
 	dbName := "Open_vSwitch"
