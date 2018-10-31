@@ -20,10 +20,6 @@ import (
 	"strings"
 )
 
-// GetAppCoverageMetrics returns the counters of the the number of times particular events
-// occur during a daemon's runtime. The counters include averaged per-second
-// rates for the last few seconds, the last minute and the last hour, and the
-// total counts of all of the coverage counters.
 func getAppCoverageMetrics(db string, sock string, timeout int) (map[string]map[string]float64, error) {
 	var app Client
 	var err error

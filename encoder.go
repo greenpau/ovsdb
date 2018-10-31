@@ -34,6 +34,7 @@ var methods = map[string]method{
 	"transact":       {Name: "transact"},
 	"list-commands":  {Name: "list-commands"},
 	"coverage/show":  {Name: "coverage/show"},
+	"memory/show":    {Name: "memory/show"},
 	"cluster/status": {Name: "cluster/status"},
 }
 
@@ -107,6 +108,7 @@ func (enc *ovsdbEncoder) Encode(v interface{}) error {
 			// e.WriteString("\"Open_vSwitch\",{\"op\":\"select\",\"table\":\"Open_vSwitch\",\"where\":[]}")
 		case "list-commands":
 		case "coverage/show":
+		case "memory/show":
 		case "cluster/status":
 			s := r.Params[0].(string)
 			e.WriteString("\"" + s + "\"")
