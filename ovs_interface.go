@@ -57,7 +57,7 @@ type OvsInterface struct {
 	OfPortRequest        []string          // TODO: unverified data type
 	Options              map[string]string // TODO: unverified data type
 	OtherConfig          map[string]string // TODO: unverified data type
-	Statistics           map[string]float64
+	Statistics           map[string]int
 	Status               map[string]string
 	Type                 string
 }
@@ -83,6 +83,7 @@ func (cli *OvsClient) GetDbInterfaces() ([]*OvsInterface, error) {
 			}
 			intf.UUID = r.(string)
 		}
+
 		if r, dt, err := row.GetColumnValue("name", result.Columns); err != nil {
 			continue
 		} else {
@@ -91,6 +92,7 @@ func (cli *OvsClient) GetDbInterfaces() ([]*OvsInterface, error) {
 			}
 			intf.Name = r.(string)
 		}
+
 		if r, dt, err := row.GetColumnValue("external_ids", result.Columns); err == nil {
 			if dt == "map[string]string" {
 				intf.ExternalIDs = r.(map[string]string)
@@ -169,6 +171,22 @@ func (cli *OvsClient) GetDbInterfaces() ([]*OvsInterface, error) {
 				continue
 			}
 			intf.IngressPolicingRate = float64(r.(int64))
+		}
+
+		if r, dt, err := row.GetColumnValue("statistics", result.Columns); err == nil {
+			if dt == "map[string]integer" {
+				intf.Statistics = r.(map[string]int)
+			}
+		} else {
+			intf.Statistics = make(map[string]int)
+		}
+
+		if r, dt, err := row.GetColumnValue("status", result.Columns); err == nil {
+			if dt == "map[string]string" {
+				intf.Status = r.(map[string]string)
+			}
+		} else {
+			intf.Status = make(map[string]string)
 		}
 
 		intfs = append(intfs, intf)
