@@ -74,6 +74,8 @@ func (cli *OvsClient) AppListCommands(db string) (map[string]bool, error) {
 	switch db {
 	case "ovsdb-server":
 		return appListCommands(db, cli.Database.Vswitch.Socket.Control, cli.Timeout)
+	case "vswitchd-service":
+		return appListCommands(db, cli.Service.Vswitchd.Socket.Control, cli.Timeout)
 	default:
 		return nil, fmt.Errorf("The '%s' database is unsupported for '%s'", db, cmd)
 	}

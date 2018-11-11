@@ -83,6 +83,8 @@ func (cli *OvsClient) GetAppMemoryMetrics(db string) (map[string]float64, error)
 	switch db {
 	case "ovsdb-server":
 		return getAppMemoryMetrics(db, cli.Database.Vswitch.Socket.Control, cli.Timeout)
+	case "vswitchd-service":
+		return getAppMemoryMetrics(db, cli.Service.Vswitchd.Socket.Control, cli.Timeout)
 	default:
 		return nil, fmt.Errorf("The '%s' database is unsupported for '%s'", db, cmd)
 	}

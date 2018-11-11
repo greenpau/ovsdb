@@ -36,6 +36,7 @@ var methods = map[string]method{
 	"coverage/show":  {Name: "coverage/show"},
 	"memory/show":    {Name: "memory/show"},
 	"cluster/status": {Name: "cluster/status"},
+	"dpif/show":      {Name: "dpif/show"},
 }
 
 // An ovsdbEncoder writes JSON values to an output stream.
@@ -109,6 +110,7 @@ func (enc *ovsdbEncoder) Encode(v interface{}) error {
 		case "list-commands":
 		case "coverage/show":
 		case "memory/show":
+		case "dpif/show":
 		case "cluster/status":
 			s := r.Params[0].(string)
 			e.WriteString("\"" + s + "\"")

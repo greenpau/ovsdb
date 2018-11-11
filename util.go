@@ -16,6 +16,8 @@ package ovsdb
 
 import (
 	"encoding/json"
+	//"github.com/davecgh/go-spew/spew"
+	"sort"
 	"strings"
 )
 
@@ -33,4 +35,45 @@ func encodeString(s string) (string, error) {
 		return "", err
 	}
 	return string(b[:len(b)]), nil
+}
+
+func indentAnalysis(s string) int {
+	if s == "" {
+		return 0
+	}
+	for i, c := range s {
+		if c != ' ' {
+			return i
+		}
+	}
+	return 0
+}
+
+func dedupInts(arr []int) []int {
+	newArr := []int{}
+	sort.Sort(sort.IntSlice(arr))
+	var prevItem int
+	for i, item := range arr {
+		if i == 0 {
+			newArr = append(newArr, item)
+			prevItem = item
+			continue
+		}
+		if item == prevItem {
+			continue
+		}
+		newArr = append(newArr, item)
+		prevItem = item
+	}
+	return newArr
+}
+
+func indentDepthAnalysis(arr []int) (map[int]int, error) {
+	depth := make(map[int]int)
+	sort.Sort(sort.IntSlice(arr))
+	indents := dedupInts(arr)
+	for i, indent := range indents {
+		depth[indent] = i
+	}
+	return depth, nil
 }
