@@ -22,6 +22,8 @@ import (
 // OvsInterface represents an OVS interface. The data help by the data
 // structure is the same as the output of `ovs-vsctl list Interface`
 // command.
+//
+// Reference: http://www.openvswitch.org/support/dist-docs/ovs-vswitchd.conf.db.5.html
 type OvsInterface struct {
 	UUID                 string
 	Name                 string
@@ -54,8 +56,8 @@ type OvsInterface struct {
 	Mtu                  float64
 	MtuRequest           []string // TODO: unverified data type
 	OfPort               float64
-	OfPortRequest        []string          // TODO: unverified data type
-	Options              map[string]string // TODO: unverified data type
+	OfPortRequest        []string // TODO: unverified data type
+	Options              map[string]string
 	OtherConfig          map[string]string // TODO: unverified data type
 	Statistics           map[string]int
 	Status               map[string]string
@@ -84,13 +86,10 @@ func (cli *OvsClient) GetDbInterfaces() ([]*OvsInterface, error) {
 			intf.UUID = r.(string)
 		}
 
-		if r, dt, err := row.GetColumnValue("name", result.Columns); err != nil {
-			continue
-		} else {
-			if dt != "string" {
-				continue
+		if r, dt, err := row.GetColumnValue("name", result.Columns); err == nil {
+			if dt == "string" {
+				intf.Name = r.(string)
 			}
-			intf.Name = r.(string)
 		}
 
 		if r, dt, err := row.GetColumnValue("external_ids", result.Columns); err == nil {
@@ -101,76 +100,52 @@ func (cli *OvsClient) GetDbInterfaces() ([]*OvsInterface, error) {
 			intf.ExternalIDs = make(map[string]string)
 		}
 
-		if r, dt, err := row.GetColumnValue("ofport", result.Columns); err != nil {
-			continue
-		} else {
-			if dt != "integer" {
-				continue
+		if r, dt, err := row.GetColumnValue("ofport", result.Columns); err == nil {
+			if dt == "integer" {
+				intf.OfPort = float64(r.(int64))
 			}
-			intf.OfPort = float64(r.(int64))
 		}
 
-		if r, dt, err := row.GetColumnValue("ifindex", result.Columns); err != nil {
-			continue
-		} else {
-			if dt != "integer" {
-				continue
+		if r, dt, err := row.GetColumnValue("ifindex", result.Columns); err == nil {
+			if dt == "integer" {
+				intf.IfIndex = float64(r.(int64))
 			}
-			intf.IfIndex = float64(r.(int64))
 		}
 
-		if r, dt, err := row.GetColumnValue("mtu", result.Columns); err != nil {
-			continue
-		} else {
-			if dt != "integer" {
-				continue
+		if r, dt, err := row.GetColumnValue("mtu", result.Columns); err == nil {
+			if dt == "integer" {
+				intf.Mtu = float64(r.(int64))
 			}
-			intf.Mtu = float64(r.(int64))
 		}
 
-		if r, dt, err := row.GetColumnValue("mac_in_use", result.Columns); err != nil {
-			continue
-		} else {
-			if dt != "string" {
-				continue
+		if r, dt, err := row.GetColumnValue("mac_in_use", result.Columns); err == nil {
+			if dt == "string" {
+				intf.MacInUse = r.(string)
 			}
-			intf.MacInUse = r.(string)
 		}
 
-		if r, dt, err := row.GetColumnValue("link_state", result.Columns); err != nil {
-			continue
-		} else {
-			if dt != "string" {
-				continue
+		if r, dt, err := row.GetColumnValue("link_state", result.Columns); err == nil {
+			if dt == "string" {
+				intf.LinkState = r.(string)
 			}
-			intf.LinkState = r.(string)
 		}
 
-		if r, dt, err := row.GetColumnValue("admin_state", result.Columns); err != nil {
-			continue
-		} else {
-			if dt != "string" {
-				continue
+		if r, dt, err := row.GetColumnValue("admin_state", result.Columns); err == nil {
+			if dt == "string" {
+				intf.AdminState = r.(string)
 			}
-			intf.AdminState = r.(string)
 		}
 
-		if r, dt, err := row.GetColumnValue("ingress_policing_burst", result.Columns); err != nil {
-			continue
-		} else {
-			if dt != "integer" {
-				continue
+		if r, dt, err := row.GetColumnValue("ingress_policing_burst", result.Columns); err == nil {
+			if dt == "integer" {
+				intf.IngressPolicingBurst = float64(r.(int64))
 			}
-			intf.IngressPolicingBurst = float64(r.(int64))
 		}
 
-		if r, dt, err := row.GetColumnValue("ingress_policing_rate", result.Columns); err != nil {
-			continue
-		} else {
-			if dt != "integer" {
-				continue
+		if r, dt, err := row.GetColumnValue("ingress_policing_rate", result.Columns); err == nil {
+			if dt == "integer" {
+				intf.IngressPolicingRate = float64(r.(int64))
 			}
-			intf.IngressPolicingRate = float64(r.(int64))
 		}
 
 		if r, dt, err := row.GetColumnValue("statistics", result.Columns); err == nil {
@@ -187,6 +162,26 @@ func (cli *OvsClient) GetDbInterfaces() ([]*OvsInterface, error) {
 			}
 		} else {
 			intf.Status = make(map[string]string)
+		}
+
+		if r, dt, err := row.GetColumnValue("options", result.Columns); err == nil {
+			if dt == "map[string]string" {
+				intf.Options = r.(map[string]string)
+			}
+		} else {
+			intf.Options = make(map[string]string)
+		}
+
+		if r, dt, err := row.GetColumnValue("type", result.Columns); err == nil {
+			if dt == "string" {
+				intf.Type = r.(string)
+			}
+		}
+
+		if r, dt, err := row.GetColumnValue("duplex", result.Columns); err == nil {
+			if dt == "string" {
+				intf.Duplex = r.(string)
+			}
 		}
 
 		intfs = append(intfs, intf)
