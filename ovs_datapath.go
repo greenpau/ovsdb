@@ -21,8 +21,15 @@ package ovsdb
 // Importantly, a datapath is a userspace concept.
 type OvsDatapath struct {
 	Name    string
-	Metrics struct {
-		Hit  float64
-		Miss float64
+	Lookups struct {
+		Hit    float64
+		Missed float64
+		Lost   float64
+	}
+	Flows float64
+	Masks struct {
+		Hit      float64
+		Total    float64
+		HitRatio float64
 	}
 }
