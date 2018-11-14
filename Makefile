@@ -49,4 +49,6 @@ ovs:
 
 qtest:
 	@#go test -v -run TestListDatabasesMethod
-	@go test -v -run TestNewClient
+	@#go test -v -run TestNewClient
+	@go test -v -run TestOvsTunnelStringParse
+	@go test -v -run TestOvsFlowStringParse

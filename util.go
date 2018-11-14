@@ -17,7 +17,9 @@ package ovsdb
 import (
 	"encoding/json"
 	//"github.com/davecgh/go-spew/spew"
+	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -76,4 +78,29 @@ func indentDepthAnalysis(arr []int) (map[int]int, error) {
 		depth[indent] = i
 	}
 	return depth, nil
+}
+
+func parseTimeUsed(s string) (float64, error) {
+	if s == "never" {
+		return 0, nil
+	}
+	var multiplier float64
+	measure := s[len(s)-1:]
+	switch measure {
+	case "s":
+		multiplier = 1
+	case "m":
+		multiplier = 60
+	case "h":
+		multiplier = 360
+	default:
+		return 0, fmt.Errorf("invalid input: %s", s)
+	}
+	s = strings.TrimRight(s, measure)
+
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid input: %s", s)
+	}
+	return (v * multiplier), nil
 }

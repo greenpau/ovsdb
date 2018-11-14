@@ -28,16 +28,18 @@ type method struct {
 }
 
 var methods = map[string]method{
-	"echo":           {Name: "echo"},
-	"list_dbs":       {Name: "list_dbs"},
-	"get_schema":     {Name: "get_schema"},
-	"transact":       {Name: "transact"},
-	"list-commands":  {Name: "list-commands"},
-	"coverage/show":  {Name: "coverage/show"},
-	"memory/show":    {Name: "memory/show"},
-	"cluster/status": {Name: "cluster/status"},
-	"dpif/show":      {Name: "dpif/show"},
-	"dpctl/show":     {Name: "dpctl/show"},
+	"echo":                 {Name: "echo"},
+	"list_dbs":             {Name: "list_dbs"},
+	"get_schema":           {Name: "get_schema"},
+	"transact":             {Name: "transact"},
+	"list-commands":        {Name: "list-commands"},
+	"coverage/show":        {Name: "coverage/show"},
+	"memory/show":          {Name: "memory/show"},
+	"cluster/status":       {Name: "cluster/status"},
+	"dpif/show":            {Name: "dpif/show"},
+	"dpctl/show":           {Name: "dpctl/show"},
+	"ofproto/list-tunnels": {Name: "ofproto/list-tunnels"},
+	"dpctl/dump-flows":     {Name: "dpctl/dump-flows"},
 }
 
 // An ovsdbEncoder writes JSON values to an output stream.
@@ -113,6 +115,8 @@ func (enc *ovsdbEncoder) Encode(v interface{}) error {
 		case "memory/show":
 		case "dpif/show":
 		case "dpctl/show":
+		case "ofproto/list-tunnels":
+		case "dpctl/dump-flows":
 		case "cluster/status":
 			s := r.Params[0].(string)
 			e.WriteString("\"" + s + "\"")
