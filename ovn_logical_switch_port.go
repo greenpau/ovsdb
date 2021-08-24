@@ -21,13 +21,20 @@ import (
 	"strings"
 )
 
+type OvnLogicalSwitchPortAddress struct {
+	MacAddress  net.HardwareAddr
+	IpAddresses []net.IP
+	Dynamic     bool
+	Router      bool
+	Unknown     bool
+}
+
 // OvnLogicalSwitchPort holds a consolidated record from both NB and SB
 // databases about a logical switch port and the workload attached to it.
 type OvnLogicalSwitchPort struct {
 	UUID              string
 	Name              string
-	MacAddress        net.HardwareAddr
-	IPAddress         net.IP
+	Addresses         []OvnLogicalSwitchPortAddress
 	ExternalIDs       map[string]string
 	Encapsulation     string
 	TunnelKey         uint64
@@ -38,6 +45,49 @@ type OvnLogicalSwitchPort struct {
 	DatapathUUID      string
 	LogicalSwitchUUID string
 	LogicalSwitchName string
+}
+
+func parseLogicalPortAddress(s string) OvnLogicalSwitchPortAddress {
+	addrs := strings.Split(s, " ")
+
+	// Check if address line is "router"
+	if addrs[0] == "router" {
+		return OvnLogicalSwitchPortAddress{Router: true}
+	}
+
+	// Check if address line is "unknown"
+	if addrs[0] == "unknown" {
+		return OvnLogicalSwitchPortAddress{Unknown: true}
+	}
+
+	// Check if address line is "dynamic"
+	if addrs[0] == "dynamic" {
+		portAddress := OvnLogicalSwitchPortAddress{Unknown: true}
+		// Sometimes "dynamic" may be followed by an IP address(es)
+		if len(addrs) > 1 {
+			for _, v := range addrs[1:] {
+				portAddress.IpAddresses = append(portAddress.IpAddresses, net.ParseIP(v))
+			}
+		}
+		return portAddress
+	}
+
+	// In all other cases first entry should be a MAC address
+	macAddr, _ := net.ParseMAC(addrs[0])
+	portAddress := OvnLogicalSwitchPortAddress{MacAddress: macAddr}
+
+	// Process any IP addresses
+	if len(addrs) > 1 {
+		if addrs[1] == "dynamic" {
+			portAddress.Dynamic = true
+		} else {
+			for _, v := range addrs[1:] {
+				portAddress.IpAddresses = append(portAddress.IpAddresses, net.ParseIP(v))
+			}
+		}
+	}
+
+	return portAddress
 }
 
 // GetLogicalSwitchPorts returns a list of OVN logical switch ports.
@@ -83,13 +133,12 @@ func (cli *OvnClient) GetLogicalSwitchPorts() ([]*OvnLogicalSwitchPort, error) {
 			port.ExternalIDs = make(map[string]string)
 		}
 		if r, dt, err := row.GetColumnValue("addresses", result.Columns); err == nil {
-			if dt == "string" {
-				addrs := strings.Split(r.(string), " ")
-				if len(addrs) == 2 {
-					if macAddress, err := net.ParseMAC(addrs[0]); err == nil {
-						port.MacAddress = macAddress
-						port.IPAddress = net.ParseIP(addrs[1])
-					}
+			switch dt {
+			case "string":
+				port.Addresses = append(port.Addresses, parseLogicalPortAddress(r.(string)))
+			case "[]string":
+				for _, s := range r.([]string) {
+					port.Addresses = append(port.Addresses, parseLogicalPortAddress(s))
 				}
 			}
 		}

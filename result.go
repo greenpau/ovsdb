@@ -53,12 +53,17 @@ func (r *Row) GetColumnValue(column string, columns map[string]string) (interfac
 			return sliceDataValue.(string), "string", nil
 		case "set":
 			for _, x := range sliceDataValue.([]interface{}) {
-				k := reflect.ValueOf(x).Index(0).Interface().(string)
-				if k == "uuid" {
-					v := reflect.ValueOf(x).Index(1).Interface().(string)
-					sliceData = append(sliceData, v)
-				} else {
-					return sliceData, "", fmt.Errorf("Column %s contains %s, but []%s is not supported: %v", column, dataType, k, data)
+				switch reflect.TypeOf(x).Kind().String() {
+				case "slice":
+					k := reflect.ValueOf(x).Index(0).Interface().(string)
+					if k == "uuid" {
+						v := reflect.ValueOf(x).Index(1).Interface().(string)
+						sliceData = append(sliceData, v)
+					} else {
+						return sliceData, "", fmt.Errorf("Column %s contains %s, but []%s is not supported: %v", column, dataType, k, data)
+					}
+				case "string":
+					sliceData = append(sliceData, reflect.ValueOf(x).Interface().(string))
 				}
 			}
 			if len(sliceData) > 0 {
