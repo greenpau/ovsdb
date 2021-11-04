@@ -124,6 +124,12 @@ func (cli *OvsClient) GetDbInterfaces() ([]*OvsInterface, error) {
 			}
 		}
 
+		if r, dt, err := row.GetColumnValue("link_speed", result.Columns); err == nil {
+			if dt == "integer" {
+				intf.LinkSpeed = float64(r.(int64))
+			}
+		}
+
 		if r, dt, err := row.GetColumnValue("link_state", result.Columns); err == nil {
 			if dt == "string" {
 				intf.LinkState = r.(string)
