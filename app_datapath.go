@@ -214,7 +214,7 @@ func getAppDatapath(db string, sock string, timeout int) ([]*OvsDatapath, error)
 			i := strings.Index(line, ":")
 			dpn = line[:i]
 			dp.Name = dpn
-		case 1:
+		case 1, 2:
 			if dp == nil {
 				continue
 			}
