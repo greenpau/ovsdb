@@ -79,8 +79,12 @@ func getSystemID(filepath string) (string, error) {
 	if err := scanner.Err(); err != nil {
 		return systemID, err
 	}
-	if len(systemID) != 36 {
-		return systemID, fmt.Errorf("system-id is not 32 characters in length, but %d", len(systemID))
+	// vswitch.ovsschema does not limit system IDs to a particular length and a common
+	// ID to use is UUID (36 bytes). However, some tools use FQDNs for system-ids which
+	// are limited to 253 octets per RFC1035. Hence the current limit checked by the
+	// exporter is 253 bytes to avoid arbitrary length for system IDs and to have a sane limit.
+	if len(systemID) > 253 {
+		return systemID, fmt.Errorf("system-id is greater than what the exporter currently allows: %d vs 253", len(systemID))
 	}
 	return systemID, nil
 }
