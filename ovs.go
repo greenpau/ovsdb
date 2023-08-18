@@ -69,14 +69,14 @@ func NewOvsClient() *OvsClient {
 	cli.Service.Vswitchd.Process.Group = "openvswitch"
 	cli.Service.Vswitchd.File.Log.Path = "/var/log/openvswitch/ovs-vswitchd.log"
 	cli.Service.Vswitchd.File.Pid.Path = "/var/run/openvswitch/ovs-vswitchd.pid"
-	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("/var/run/openvswitch/ovs-vswitchd.%d.ctl", cli.Service.Vswitchd.Process.ID)
+	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("%s/ovs-vswitchd.%d.ctl", cli.System.RunDir, cli.Service.Vswitchd.Process.ID)
 
 	cli.Service.OvnController.Process.ID = 0
 	cli.Service.OvnController.Process.User = "openvswitch"
 	cli.Service.OvnController.Process.Group = "openvswitch"
 	cli.Service.OvnController.File.Log.Path = "/var/log/openvswitch/ovn-controller.log"
 	cli.Service.OvnController.File.Pid.Path = "/var/run/openvswitch/ovn-controller.pid"
-	cli.Service.OvnController.Socket.Control = fmt.Sprintf("/var/run/openvswitch/ovn-controller.%d.ctl", cli.Service.OvnController.Process.ID)
+	cli.Service.OvnController.Socket.Control = fmt.Sprintf("%s/ovn-controller.%d.ctl", cli.System.RunDir, cli.Service.OvnController.Process.ID)
 
 	return &cli
 }
@@ -102,7 +102,7 @@ func (cli *OvsClient) Close() {
 }
 
 func (cli *OvsClient) updateRefs() {
-	cli.Database.Vswitch.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovsdb-server.%d.ctl", cli.Database.Vswitch.Process.ID)
-	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovs-vswitchd.%d.ctl", cli.Service.Vswitchd.Process.ID)
-	cli.Service.OvnController.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovn-controller.%d.ctl", cli.Service.OvnController.Process.ID)
+	cli.Database.Vswitch.Socket.Control = fmt.Sprintf("unix:%s/ovsdb-server.%d.ctl", cli.System.RunDir, cli.Database.Vswitch.Process.ID)
+	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("unix:%s/ovs-vswitchd.%d.ctl", cli.System.RunDir, cli.Service.Vswitchd.Process.ID)
+	cli.Service.OvnController.Socket.Control = fmt.Sprintf("unix:%s/ovn-controller.%d.ctl", cli.System.RunDir, cli.Service.OvnController.Process.ID)
 }
