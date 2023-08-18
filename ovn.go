@@ -58,7 +58,7 @@ func NewOvnClient() *OvnClient {
 	cli.Database.Vswitch.Schema.Version = "unknown"
 	cli.Database.Vswitch.Name = "Open_vSwitch"
 	cli.Database.Vswitch.Socket.Remote = "unix:/var/run/openvswitch/db.sock"
-	cli.Database.Vswitch.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovsdb-server.%d.ctl", cli.Database.Vswitch.Process.ID)
+	cli.Database.Vswitch.Socket.Control = fmt.Sprintf("unix:%s/ovsdb-server.%d.ctl", cli.System.RunDir, cli.Database.Vswitch.Process.ID)
 	cli.Database.Vswitch.File.Data.Path = "/etc/openvswitch/conf.db"
 	cli.Database.Vswitch.File.Log.Path = "/var/log/openvswitch/ovsdb-server.log"
 	cli.Database.Vswitch.File.Pid.Path = "/var/run/openvswitch/ovsdb-server.pid"
@@ -97,14 +97,14 @@ func NewOvnClient() *OvnClient {
 	cli.Service.Vswitchd.Process.Group = "openvswitch"
 	cli.Service.Vswitchd.File.Log.Path = "/var/log/openvswitch/ovs-vswitchd.log"
 	cli.Service.Vswitchd.File.Pid.Path = "/var/run/openvswitch/ovs-vswitchd.pid"
-	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovs-vswitchd.%d.ctl", cli.Service.Vswitchd.Process.ID)
+	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("unix:%s/ovs-vswitchd.%d.ctl", cli.System.RunDir, cli.Service.Vswitchd.Process.ID)
 
 	cli.Service.Northd.Process.ID = 0
 	cli.Service.Northd.Process.User = "openvswitch"
 	cli.Service.Northd.Process.Group = "openvswitch"
 	cli.Service.Northd.File.Log.Path = "/var/log/openvswitch/ovn-northd.log"
 	cli.Service.Northd.File.Pid.Path = "/run/openvswitch/ovn-northd.pid"
-	cli.Service.Northd.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovn-northd.%d.ctl", cli.Service.Northd.Process.ID)
+	cli.Service.Northd.Socket.Control = fmt.Sprintf("unix:%s/ovn-northd.%d.ctl", cli.System.RunDir, cli.Service.Northd.Process.ID)
 
 	return &cli
 }
@@ -156,7 +156,7 @@ func (cli *OvnClient) Close() {
 }
 
 func (cli *OvnClient) updateRefs() {
-	cli.Database.Vswitch.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovsdb-server.%d.ctl", cli.Database.Vswitch.Process.ID)
-	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovs-vswitchd.%d.ctl", cli.Service.Vswitchd.Process.ID)
-	cli.Service.Northd.Socket.Control = fmt.Sprintf("unix:/var/run/openvswitch/ovn-northd.%d.ctl", cli.Service.Northd.Process.ID)
+	cli.Database.Vswitch.Socket.Control = fmt.Sprintf("unix:%s/ovsdb-server.%d.ctl", cli.System.RunDir, cli.Database.Vswitch.Process.ID)
+	cli.Service.Vswitchd.Socket.Control = fmt.Sprintf("unix:%s/ovs-vswitchd.%d.ctl", cli.System.RunDir, cli.Service.Vswitchd.Process.ID)
+	cli.Service.Northd.Socket.Control = fmt.Sprintf("unix:%s/ovn-northd.%d.ctl", cli.System.RunDir, cli.Service.Northd.Process.ID)
 }
