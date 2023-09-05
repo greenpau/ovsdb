@@ -1,5 +1,7 @@
 # OVSDB Management Protocol (RFC 7047) Client Library
 
+<a href="https://github.com/greenpau/ovsdb/actions/" target="_blank"><img src="https://github.com/greenpau/ovsdb/workflows/build/badge.svg?branch=main"></a>
+
 This Go library implements a client for the [Open vSwitch Database Management
 Protocol](https://tools.ietf.org/html/rfc7047).
 
