@@ -52,7 +52,7 @@ jobs:
         sudo apt-get --assume-yes install openvswitch-switch
         sudo apt-get --assume-yes install ovn-central
         sudo systemctl start openvswitch
-        sudo systemctl start ovn-northd
+        # sudo systemctl start ovn-northd
     - name: Install Go modules
       run: |
         make dep
