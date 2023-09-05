@@ -48,6 +48,13 @@ clean:
 	@rm -rf .doc
 	@rm -rf .coverage
 
+dep:
+	@echo "Making dependencies check ..."
+	@go install golang.org/x/lint/golint@latest
+	@go install github.com/kyoh86/richgo@latest
+	@go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+	@go install github.com/greenpau/versioned/cmd/versioned@latest
+
 ovs:
 	@ovs-vsctl add-br vbr0 || true
 	@ovs-vsctl add-port vbr0 vport0 || true
