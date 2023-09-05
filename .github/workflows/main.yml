@@ -51,11 +51,19 @@ jobs:
         sudo apt-get update
         sudo apt-get --assume-yes install openvswitch-switch
         sudo apt-get --assume-yes install ovn-central
-        sudo systemctl start openvswitch
+        sudo systemctl start openvswitch-switch
         # sudo systemctl start ovn-northd
     - name: Install Go modules
       run: |
         make dep
+    - name: Open vSwitch Checks
+      run: |
+        sudo ovs-vsctl --version
+        sudo ovs-vsctl show
+        sudo systemctl status openvswitch-switch.service
+        sudo ovs-vsctl add-br br0
+        sudo ovs-vsctl list bridge
+        sudo ps -ef
     - name: Validate prerequisites
       run: |
         echo "*** Local binaries ***"
