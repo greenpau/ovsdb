@@ -23,8 +23,8 @@ import (
 func TestGetSchemaMethod(t *testing.T) {
 	dbs := make(map[string]string)
 	dbs["Open_vSwitch"] = "unix:/var/run/openvswitch/db.sock"
-	dbs["OVN_Southbound"] = "unix:/run/openvswitch/ovnsb_db.sock"
-	dbs["OVN_Northbound"] = "unix:/run/openvswitch/ovnnb_db.sock"
+	dbs["OVN_Southbound"] = "unix:/run/ovn/ovnsb_db.sock"
+	dbs["OVN_Northbound"] = "unix:/run/ovn/ovnnb_db.sock"
 	var keys []string
 	for k := range dbs {
 		keys = append(keys, k)
@@ -58,8 +58,8 @@ func TestGetSchemaMethod(t *testing.T) {
 func TestSchemaGetTables(t *testing.T) {
 	dbs := make(map[string]string)
 	dbs["Open_vSwitch"] = "unix:/var/run/openvswitch/db.sock"
-	dbs["OVN_Southbound"] = "unix:/run/openvswitch/ovnsb_db.sock"
-	dbs["OVN_Northbound"] = "unix:/run/openvswitch/ovnnb_db.sock"
+	dbs["OVN_Southbound"] = "unix:/run/ovn/ovnsb_db.sock"
+	dbs["OVN_Northbound"] = "unix:/run/ovn/ovnnb_db.sock"
 	var keys []string
 	for k := range dbs {
 		keys = append(keys, k)
@@ -92,8 +92,8 @@ func TestSchemaGetTables(t *testing.T) {
 func TestSchemaGetColumns(t *testing.T) {
 	dbs := make(map[string]string)
 	dbs["Open_vSwitch"] = "unix:/var/run/openvswitch/db.sock"
-	dbs["OVN_Southbound"] = "unix:/run/openvswitch/ovnsb_db.sock"
-	dbs["OVN_Northbound"] = "unix:/run/openvswitch/ovnnb_db.sock"
+	dbs["OVN_Southbound"] = "unix:/run/ovn/ovnsb_db.sock"
+	dbs["OVN_Northbound"] = "unix:/run/ovn/ovnnb_db.sock"
 	var keys []string
 	for k := range dbs {
 		keys = append(keys, k)
@@ -190,8 +190,8 @@ func TestSchemaGetColumnType(t *testing.T) {
 func TestSchemaTypesAll(t *testing.T) {
 	dbs := make(map[string]string)
 	dbs["Open_vSwitch"] = "unix:/var/run/openvswitch/db.sock"
-	dbs["OVN_Southbound"] = "unix:/run/openvswitch/ovnsb_db.sock"
-	dbs["OVN_Northbound"] = "unix:/run/openvswitch/ovnnb_db.sock"
+	dbs["OVN_Southbound"] = "unix:/run/ovn/ovnsb_db.sock"
+	dbs["OVN_Northbound"] = "unix:/run/ovn/ovnnb_db.sock"
 	var keys []string
 	for k := range dbs {
 		keys = append(keys, k)

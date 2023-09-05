@@ -19,13 +19,13 @@ import (
 	//"github.com/davecgh/go-spew/spew"
 )
 
-// OvnLogicalSwitch holds basic information about a logical switch.
+// OvnACL holds ACL information.
 type OvnACL struct {
 	UUID        string `json:"uuid" yaml:"uuid"`
 	ExternalIDs map[string]string
 }
 
-// ACLs returns a list of OVN ACLs.
+// GetACL returns a list of OVN ACLs.
 func (cli *OvnClient) GetACL() ([]*OvnACL, error) {
 	acls := []*OvnACL{}
 	// First, get basic information about OVN logical switches.

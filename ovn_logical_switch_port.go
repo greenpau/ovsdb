@@ -21,9 +21,10 @@ import (
 	"strings"
 )
 
+// OvnLogicalSwitchPortAddress holds MAC and IP address information.
 type OvnLogicalSwitchPortAddress struct {
 	MacAddress  net.HardwareAddr
-	IpAddresses []net.IP
+	IPAddresses []net.IP
 	Dynamic     bool
 	Router      bool
 	Unknown     bool
@@ -66,7 +67,7 @@ func parseLogicalPortAddress(s string) OvnLogicalSwitchPortAddress {
 		// Sometimes "dynamic" may be followed by an IP address(es)
 		if len(addrs) > 1 {
 			for _, v := range addrs[1:] {
-				portAddress.IpAddresses = append(portAddress.IpAddresses, net.ParseIP(v))
+				portAddress.IPAddresses = append(portAddress.IPAddresses, net.ParseIP(v))
 			}
 		}
 		return portAddress
@@ -82,7 +83,7 @@ func parseLogicalPortAddress(s string) OvnLogicalSwitchPortAddress {
 			portAddress.Dynamic = true
 		} else {
 			for _, v := range addrs[1:] {
-				portAddress.IpAddresses = append(portAddress.IpAddresses, net.ParseIP(v))
+				portAddress.IPAddresses = append(portAddress.IPAddresses, net.ParseIP(v))
 			}
 		}
 	}

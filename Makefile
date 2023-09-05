@@ -18,8 +18,8 @@ info:
 
 rights:
 	@sudo chmod o+rw /var/run/openvswitch/db.sock || true
-	@sudo chmod o+rw /run/openvswitch/ovnnb_db.sock || true
-	@sudo chmod o+rw /run/openvswitch/ovnsb_db.sock || true
+	@sudo chmod o+rw /run/ovn/ovnnb_db.sock || true
+	@sudo chmod o+rw /run/ovn/ovnsb_db.sock || true
 
 linter:
 	@golint
