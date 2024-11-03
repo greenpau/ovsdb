@@ -53,6 +53,7 @@ type ClusterState struct {
 	}
 	NextIndex           uint64
 	MatchIndex          uint64
+	ElectionTimer 		uint64
 	NotCommittedEntries uint64
 	NotAppliedEntries   uint64
 	Peers               map[string]*ClusterPeer
@@ -215,6 +216,12 @@ func (cli *OvnClient) GetAppClusteringInfo(db string) (ClusterState, error) {
 			s = strings.Join(strings.Fields(s), " ")
 			if i, err := strconv.ParseUint(s, 10, 64); err == nil {
 				server.NotAppliedEntries = i
+			}
+		} else if strings.HasPrefix(line, "Election timer:") {
+			s := strings.TrimLeft(line, "Election timer:")
+			s = strings.Join(strings.Fields(s), " ")
+			if i, err := strconv.ParseUint(s, 10, 64); err == nil {
+				server.ElectionTimer = i
 			}
 		} else if strings.HasPrefix(line, "Connections:") {
 			s := strings.TrimLeft(line, "Connections:")

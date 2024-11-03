@@ -19,34 +19,33 @@ import (
 	//"github.com/davecgh/go-spew/spew"
 )
 
-// OvnACL holds ACL information.
-type OvnACL struct {
+// OvnLFlow holds Logical_Flow information.
+type OvnLFlow struct {
 	UUID        string `json:"uuid" yaml:"uuid"`
 }
 
-// GetACL returns a list of OVN ACLs.
-func (cli *OvnClient) GetACL() ([]*OvnACL, error) {
-	acls := []*OvnACL{}
-	// First, get basic information about OVN logical switches.
-	query := "SELECT _uuid FROM ACL"
-	result, err := cli.Database.Northbound.Client.Transact(cli.Database.Northbound.Name, query)
+// GetLFlow returns a list of OVN LFlows.
+func (cli *OvnClient) GetLFlow() ([]*OvnLFlow, error) {
+	lflows := []*OvnLFlow{}
+	query := "SELECT _uuid FROM Logical_Flow"
+	result, err := cli.Database.Southbound.Client.Transact(cli.Database.Southbound.Name, query)
 	if err != nil {
-		return nil, fmt.Errorf("%s: '%s' table error: %s", cli.Database.Northbound.Name, "ACL", err)
+		return nil, fmt.Errorf("%s: '%s' table error: %s", cli.Database.Southbound.Name, "Logical_Flow", err)
 	}
 	if len(result.Rows) == 0 {
-		return nil, fmt.Errorf("%s: no acl found", cli.Database.Northbound.Name)
+		return nil, fmt.Errorf("%s: no lflow found", cli.Database.Southbound.Name)
 	}
 	for _, row := range result.Rows {
-		acl := &OvnACL{}
+		lflow := &OvnLFlow{}
 		if r, dt, err := row.GetColumnValue("_uuid", result.Columns); err != nil {
 			continue
 		} else {
 			if dt != "string" {
 				continue
 			}
-			acl.UUID = r.(string)
+			lflow.UUID = r.(string)
 		}
-		acls = append(acls, acl)
+		lflows = append(lflows, lflow)
 	}
-	return acls, nil
+	return lflows, nil
 }
